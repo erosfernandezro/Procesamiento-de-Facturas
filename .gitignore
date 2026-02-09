@@ -1,0 +1,28 @@
+# Python compilado
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Entorno y Secretos
+.env
+venv/
+env/
+
+# Base de datos local
+*.db
+*.sqlite
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Documentos de prueba (Opcional, si no quieres subirlos)
+*.PDF
+*.png
+*.PNG
+*.txt
+!requirements.txt
+
+*docker-compose.yml
+*Dockerfile
+*python

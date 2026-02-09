@@ -1,0 +1,18 @@
+# Web Framework y Servidor
+flask
+python-dotenv
+gunicorn
+
+# Base de Datos (ORM)
+sqlalchemy
+
+# IA y Modelos
+langchain-groq
+pydantic
+pydantic-settings
+
+# Procesamiento de Documentos y OCR (Pure Python)
+PyPDF2
+easyocr
+Pillow
+numpy

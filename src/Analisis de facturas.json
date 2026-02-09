@@ -1,0 +1,236 @@
+{
+  "name": "Analisis de facturas",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Procesador de Facturas",
+        "formDescription": "Este es un pequeño formulario donde los usuarios podrán cargar las facturas a procesar.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Facturas",
+              "fieldType": "file"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        -656,
+        288
+      ],
+      "id": "f85643ba-6a7c-4ba6-9b15-de68cf107002",
+      "name": "On form submission",
+      "webhookId": "0c2c139c-0dee-420a-82d1-bcf4b86129de"
+    },
+    {
+      "parameters": {
+        "jsCode": "const datos = $input.all();\nconst salida = [];\n\nfor (const elemento of datos) {\n  const archivos = elemento.binary;\n  \n  for (const llave in archivos) {\n    if (llave.startsWith('Facturas')) {\n      const nombreArchivo = archivos[llave].fileName.toLowerCase();\n      \n      // Validar que solo sean pdf o txt\n      if (nombreArchivo.endsWith('.pdf') || nombreArchivo.endsWith('.txt')) {\n        salida.push({\n          json: {\n            llave_original: llave,\n            nombre: archivos[llave].fileName\n          },\n          binary: {\n            file: archivos[llave]\n          }\n        });\n      }\n    }\n  }\n}\n\nreturn salida;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -368,
+        288
+      ],
+      "id": "90ec8165-000c-403c-b3b7-baf72a40094d",
+      "name": "ordenar archivos"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://127.0.0.1:5000/api/v1/extraer",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "file"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -176,
+        256
+      ],
+      "id": "cbb3dcbe-ac9e-4f8a-9214-690f45464c91",
+      "name": "HTTP Request - TEXT to JSON",
+      "retryOnFail": false,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        96,
+        16
+      ],
+      "id": "f6daccba-278d-4a15-b140-b5aab27d3bde",
+      "name": "Convert to File",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "## Generar CSV y mandarlo por mail\nSe genera un reporte CSV con todos los datos extraídos y lo envía automáticamente por mail. Así, el supervisor o el cliente reciben la información ya masticada y lista para usar, eliminando cualquier carga manual de datos",
+        "height": 336,
+        "width": 400,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        32,
+        -128
+      ],
+      "typeVersion": 1,
+      "id": "b6ba5642-81f1-4943-a28e-bcb7d9068d69",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        256,
+        16
+      ],
+      "id": "3ef6bf09-dc9a-499c-9b0c-936924dda051",
+      "name": "Send a message",
+      "webhookId": "5a710852-ab71-4d83-8ae2-038f1afdc2cd",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "QECpknOhWYtsej1b",
+          "name": "Gmail account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "## Formulario para carga de archivos\nSe habilita un formulario para que el usuario pueda cargar las facturas u otros archivos disponibles para procesar.",
+        "height": 272,
+        "width": 400,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -848,
+        144
+      ],
+      "typeVersion": 1,
+      "id": "203f29f4-4941-4dba-bc62-7216e60f9c93",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Procesamiento de los datos\nSe ordenan los archivos y se mandan por HTPP Request a una API que lo conecta con el codigo local que procesa los archivos y genera un Archivo SQLlite con los datos",
+        "height": 304,
+        "width": 400,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -416,
+        128
+      ],
+      "typeVersion": 1,
+      "id": "f036c0ae-e373-4950-9435-8f10f8f6b2bd",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "completionTitle": "No se pudo completar el procesamiento:",
+        "completionMessage": "=Hubo un inconveniente al conectar con el servidor de procesamiento local. Esto puede deberse a una interrupción momentánea en la red o a que el servicio está en mantenimiento.\n\n¿Qué hacer ahora?\n\nVerifica que tu conexión a internet sea estable.\n\nReintenta la carga en un par de minutos.\n\nSi el problema persiste, contacta al soporte técnico con el código de error: ERR_API_LOCAL_DISCONNECT.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.5,
+      "position": [
+        80,
+        352
+      ],
+      "id": "a7332bf4-ac99-4c27-8f96-e4077226faf4",
+      "name": "Notificacion de Error",
+      "webhookId": "60d18bfb-8256-4087-bdad-d15764b495bd"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "ordenar archivos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ordenar archivos": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request - TEXT to JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request - TEXT to JSON": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notificacion de Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "f648b9b2-5c44-49a6-937a-6e2599f90586",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "37869f238654cb5e19002d8959e9e2f4830bfeb37f724b69b99434284e0c39eb"
+  },
+  "id": "wiBgrG7VxmfQ81He3dW79",
+  "tags": []
+}
